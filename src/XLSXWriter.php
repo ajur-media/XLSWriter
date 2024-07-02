@@ -59,7 +59,7 @@ class XLSXWriter
      * @param string $title
      * @return void
      */
-    public function setTitle(string $title = ''):void
+    public function setTitle(string $title = ''): void
     {
         $this->title = $title;
     }
@@ -92,10 +92,10 @@ class XLSXWriter
     }
 
     /**
-     * @param string $keywords
+     * @param string|array $keywords
      * @return void
      */
-    public function setKeywords(string $keywords = ''): void
+    public function setKeywords($keywords = ''): void
     {
         $this->keywords = $keywords;
     }
@@ -382,7 +382,7 @@ class XLSXWriter
 
         if (!empty($row_options)) {
             $ht = isset($row_options['height']) ? floatval($row_options['height']) : 12.1;
-            $customHt = isset($row_options['height']) ? true : false;
+            $customHt = isset($row_options['height']);
             $hidden = isset($row_options['hidden']) ? (bool)($row_options['hidden']) : false;
             $collapsed = isset($row_options['collapsed']) ? (bool)($row_options['collapsed']) : false;
             $sheet->file_writer->write('<row collapsed="' . ($collapsed ? 'true' : 'false') . '" customFormat="false" customHeight="' . ($customHt ? 'true' : 'false') . '" hidden="' . ($hidden ? 'true' : 'false') . '" ht="' . ($ht) . '" outlineLevel="0" r="' . ($sheet->row_count + 1) . '">');
@@ -505,10 +505,6 @@ class XLSXWriter
 
     protected function styleFontIndexes()
     {
-        static $border_allowed = ['left', 'right', 'top', 'bottom'];
-        static $border_style_allowed = ['thin', 'medium', 'thick', 'dashDot', 'dashDotDot', 'dashed', 'dotted', 'double', 'hair', 'mediumDashDot', 'mediumDashDotDot', 'mediumDashed', 'slantDashDot'];
-        static $horizontal_allowed = ['general', 'left', 'right', 'justify', 'center'];
-        static $vertical_allowed = ['bottom', 'center', 'distributed', 'top'];
         $default_font = ['size' => '10', 'name' => 'Arial', 'family' => '2'];
         $fills = ['', ''];//2 placeholders for static xml later
         $fonts = ['', '', '', ''];//4 placeholders for static xml later
@@ -525,8 +521,8 @@ class XLSXWriter
             {
                 $border_value = [];
 
-                $border_value['side'] = array_intersect(explode(",", $style['border']), $border_allowed);
-                if (isset($style['border-style']) && in_array($style['border-style'], $border_style_allowed)) {
+                $border_value['side'] = array_intersect(explode(",", $style['border']), self::border_allowed);
+                if (isset($style['border-style']) && in_array($style['border-style'], self::border_style_allowed)) {
                     $border_value['style'] = $style['border-style'];
                 }
                 if (isset($style['border-color']) && is_string($style['border-color']) && $style['border-color'][0] === '#') {
@@ -541,11 +537,11 @@ class XLSXWriter
                 $v = strlen($v) == 3 ? $v[0] . $v[0] . $v[1] . $v[1] . $v[2] . $v[2] : $v;// expand cf0 => ccff00
                 $style_indexes[$i]['fill_idx'] = self::add_to_list_get_index($fills, "FF" . strtoupper($v));
             }
-            if (isset($style['halign']) && in_array($style['halign'], $horizontal_allowed)) {
+            if (isset($style['halign']) && in_array($style['halign'], self::horizontal_allowed)) {
                 $style_indexes[$i]['alignment'] = true;
                 $style_indexes[$i]['halign'] = $style['halign'];
             }
-            if (isset($style['valign']) && in_array($style['valign'], $vertical_allowed)) {
+            if (isset($style['valign']) && in_array($style['valign'], self::vertical_allowed)) {
                 $style_indexes[$i]['alignment'] = true;
                 $style_indexes[$i]['valign'] = $style['valign'];
             }
@@ -627,7 +623,7 @@ class XLSXWriter
         foreach ($fonts as $font) {
             if (!empty($font)) { //fonts have 4 empty placeholders in array to offset the 4 static xml entries above
                 /** @var array $f */
-                $f = json_decode($font, true);
+                $f = \json_decode($font, true);
                 $file->write('<font>');
                 $file->write('<name val="' . htmlspecialchars($f['name']) . '"/><charset val="1"/><family val="' . intval($f['family']) . '"/>');
                 $file->write('<sz val="' . intval($f['size']) . '"/>');
@@ -665,12 +661,12 @@ class XLSXWriter
         $file->write('<border diagonalDown="false" diagonalUp="false"><left/><right/><top/><bottom/><diagonal/></border>');
         foreach ($borders as $border) {
             if (!empty($border)) { //fonts have an empty placeholder in the array to offset the static xml entry above
-                $pieces = json_decode($border, true);
+                $pieces = \json_decode($border, true);
                 $border_style = !empty($pieces['style']) ? $pieces['style'] : 'hair';
                 $border_color = !empty($pieces['color']) ? '<color rgb="' . strval($pieces['color']) . '"/>' : '';
                 $file->write('<border diagonalDown="false" diagonalUp="false">');
-                foreach (array('left', 'right', 'top', 'bottom') as $side) {
-                    $show_side = in_array($side, $pieces['side']) ? true : false;
+                foreach (self::border_allowed as $side) {
+                    $show_side = \in_array($side, $pieces['side']);
                     $file->write($show_side ? "<$side style=\"$border_style\">$border_color</$side>" : "<$side/>");
                 }
                 $file->write('<diagonal/>');
@@ -863,8 +859,8 @@ class XLSXWriter
     {
         $n = $column_number;
         $row_number = (int)$row_number;
-        for ($r = ""; $n >= 0; $n = intval($n / 26) - 1) {
-            $r = chr($n % 26 + 0x41) . $r;
+        for ($r = ""; $n >= 0; $n = \intval($n / 26) - 1) {
+            $r = \chr($n % 26 + 0x41) . $r;
         }
         if ($absolute) {
             return '$' . $r . '$' . ($row_number + 1);
@@ -876,7 +872,7 @@ class XLSXWriter
     public static function log($string)
     {
         //file_put_contents("php://stderr", date("Y-m-d H:i:s:").rtrim(is_array($string) ? json_encode($string) : $string)."\n");
-        error_log(date("Y-m-d H:i:s:") . rtrim(is_array($string) ? json_encode($string) : $string) . "\n");
+        \error_log(date("Y-m-d H:i:s:") . rtrim(is_array($string) ? json_encode($string) : $string) . "\n");
     }
 
     //------------------------------------------------------------------
@@ -962,7 +958,11 @@ class XLSXWriter
         return $escaped;
     }
 
-    //------------------------------------------------------------------
+    /**
+     * @param $haystack
+     * @param $needle
+     * @return false|int|string
+     */
     public static function add_to_list_get_index(&$haystack, $needle)
     {
         $existing_idx = array_search($needle, $haystack, $strict = true);
@@ -973,12 +973,16 @@ class XLSXWriter
         return $existing_idx;
     }
 
-    //------------------------------------------------------------------
+    /**
+     * @param $date_input
+     * @return float|int|string
+     */
     public static function convert_date_time($date_input) //thanks to Excel::Writer::XLSX::Worksheet.pm (perl)
     {
         $days = 0;    # Number of days since epoch
         $seconds = 0;    # Time expressed as fraction of 24h hours in seconds
         $year = $month = $day = 0;
+
         $hour = $min = $sec = 0;
 
         $date_time = $date_input;
@@ -993,9 +997,9 @@ class XLSXWriter
         //using 1900 as epoch, not 1904, ignoring 1904 special case
 
         # Special cases for Excel.
-        if ("$year-$month-$day" == '1899-12-31') return $seconds;    # Excel 1900 epoch
-        if ("$year-$month-$day" == '1900-01-00') return $seconds;    # Excel 1900 epoch
-        if ("$year-$month-$day" == '1900-02-29') return 60 + $seconds;    # Excel false leapday
+        if ("{$year}-{$month}-{$day}" == '1899-12-31') return $seconds;    # Excel 1900 epoch
+        if ("{$year}-{$month}-{$day}" == '1900-01-00') return $seconds;    # Excel 1900 epoch
+        if ("{$year}-{$month}-{$day}" == '1900-02-29') return 60 + $seconds;    # Excel false leapday
 
         # We calculate the date by calculating the number of days since the epoch
         # and adjust for the number of leap days. We calculate the number of leap
@@ -1033,5 +1037,6 @@ class XLSXWriter
 
         return $days + $seconds;
     }
-    //------------------------------------------------------------------
 }
+
+# -eof-

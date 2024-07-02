@@ -4,22 +4,22 @@ namespace AJUR\Toolkit;
 
 class XLSXWriter_BuffererWriter
 {
-    protected $fd=null;
-    protected $buffer='';
-    protected $check_utf8=false;
+    protected $fd = null;
+    protected string $buffer = '';
+    protected $check_utf8 = false;
 
-    public function __construct($filename, $fd_fopen_flags='w', $check_utf8=false)
+    public function __construct($filename, $fd_fopen_flags = 'w', $check_utf8 = false)
     {
         $this->check_utf8 = $check_utf8;
         $this->fd = fopen($filename, $fd_fopen_flags);
-        if ($this->fd===false) {
+        if ($this->fd === false) {
             XLSXWriter::log("Unable to open $filename for writing.");
         }
     }
 
     public function write($string)
     {
-        $this->buffer.=$string;
+        $this->buffer .= $string;
         if (isset($this->buffer[8191])) {
             $this->purge();
         }
@@ -33,7 +33,7 @@ class XLSXWriter_BuffererWriter
                 $this->check_utf8 = false;
             }
             fwrite($this->fd, $this->buffer);
-            $this->buffer='';
+            $this->buffer = '';
         }
     }
 
@@ -42,7 +42,7 @@ class XLSXWriter_BuffererWriter
         $this->purge();
         if ($this->fd) {
             fclose($this->fd);
-            $this->fd=null;
+            $this->fd = null;
         }
     }
 
@@ -71,10 +71,14 @@ class XLSXWriter_BuffererWriter
 
     protected static function isValidUTF8($string)
     {
-        if (function_exists('mb_check_encoding'))
-        {
-            return mb_check_encoding($string, 'UTF-8') ? true : false;
+        if (empty($string)) {
+            return true;
         }
+
+        if (function_exists('mb_check_encoding')) {
+            return (bool)mb_check_encoding($string, 'UTF-8');
+        }
+
         return preg_match("//u", $string) ? true : false;
     }
 }

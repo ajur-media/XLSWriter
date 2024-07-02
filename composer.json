@@ -1,0 +1,31 @@
+{
+    "name": "ajur-media/xlsx-writer",
+    "description": "PHP Library to write XLSX files",
+    "keywords": ["php", "library","xls", "xlsx", "excel"],
+    "type": "library",
+    "require": {
+        "php": "^7.2 | ^8.0",
+        "ext-zip": "*",
+        "ext-json": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "AJUR\\Toolkit\\": "src/"
+        }
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Karel Wintersky",
+            "email": "wombat@fontanka.ru"
+        }
+    ],
+    "replace": {
+        "mk-j/php_xlsxwriter": "*",
+        "maksimovic/php-xlsx-writer": "*"
+    },
+    "require-dev": {
+        "rector/rector": "^1.2",
+        "phpunit/phpunit": "^8.5 | ^9.5"
+    }
+}
