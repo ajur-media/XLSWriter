@@ -25,16 +25,16 @@ class XLSXWriter
     protected $isRightToLeft;
     protected $company;
     protected $description;
-    protected $keywords = array();
+    protected $keywords = [];
     protected $tempdir;
 
     protected $current_sheet;
 
     /** @var array|stdClass[] */
-    protected $sheets = array();
-    protected $temp_files = array();
-    protected $cell_styles = array();
-    protected $number_formats = array();
+    protected $sheets = [];
+    protected $temp_files = [];
+    protected $cell_styles = [];
+    protected $number_formats = [];
 
     /** @var int */
     protected $tabRatio = 600;
@@ -236,7 +236,7 @@ class XLSXWriter
         $zip->close();
     }
 
-    protected function initializeSheet($sheet_name, $col_widths = array(), $auto_filter = false, $freeze_rows = false, $freeze_columns = false)
+    protected function initializeSheet($sheet_name, $col_widths = [], $auto_filter = false, $freeze_rows = false, $freeze_columns = false)
     {
         //if already initialized
         if ($this->current_sheet == $sheet_name || isset($this->sheets[$sheet_name])) {
@@ -320,15 +320,15 @@ class XLSXWriter
 
     private function initializeColumnTypes($header_types)
     {
-        $column_types = array();
+        $column_types = [];
         foreach ($header_types as $v) {
             $number_format = self::numberFormatStandardized($v);
             $number_format_type = self::determineNumberFormatType($number_format);
             $cell_style_idx = $this->addCellStyle($number_format, $style_string = null);
-            $column_types[] = array('number_format' => $number_format,//contains excel format like 'YYYY-MM-DD HH:MM:SS'
+            $column_types[] = ['number_format' => $number_format,//contains excel format like 'YYYY-MM-DD HH:MM:SS'
                 'number_format_type' => $number_format_type, //contains friendly format like 'datetime'
                 'default_cell_style' => $cell_style_idx,
-            );
+            ];
         }
         return $column_types;
     }
@@ -346,7 +346,7 @@ class XLSXWriter
         }
         $style = &$col_options;
 
-        $col_widths = isset($col_options['widths']) ? (array)$col_options['widths'] : array();
+        $col_widths = isset($col_options['widths']) ? (array)$col_options['widths'] : [];
         $auto_filter = isset($col_options['auto_filter']) ? intval($col_options['auto_filter']) : false;
         $freeze_rows = isset($col_options['freeze_rows']) ? intval($col_options['freeze_rows']) : false;
         $freeze_columns = isset($col_options['freeze_columns']) ? intval($col_options['freeze_columns']) : false;
@@ -465,10 +465,10 @@ class XLSXWriter
         $sheet->merge_cells[] = $startCell . ":" . $endCell;
     }
 
-    public function writeSheet(array $data, $sheet_name = '', array $header_types = array())
+    public function writeSheet(array $data, $sheet_name = '', array $header_types = [])
     {
         $sheet_name = empty($sheet_name) ? 'Sheet1' : $sheet_name;
-        $data = empty($data) ? array(array('')) : $data;
+        $data = empty($data) ? [['']] : $data;
         if (!empty($header_types)) {
             $this->writeSheetHeader($sheet_name, $header_types);
         }
@@ -509,14 +509,14 @@ class XLSXWriter
         $fills = ['', ''];//2 placeholders for static xml later
         $fonts = ['', '', '', ''];//4 placeholders for static xml later
         $borders = [''];//1 placeholder for static xml later
-        $style_indexes = array();
+        $style_indexes = [];
         foreach ($this->cell_styles as $i => $cell_style_string) {
             $semi_colon_pos = strpos($cell_style_string, ";");
             $number_format_idx = substr($cell_style_string, 0, $semi_colon_pos);
             $style_json_string = substr($cell_style_string, $semi_colon_pos + 1);
             $style = @json_decode($style_json_string, $as_assoc = true);
 
-            $style_indexes[$i] = array('num_fmt_idx' => $number_format_idx);//initialize entry
+            $style_indexes[$i] = ['num_fmt_idx' => $number_format_idx];//initialize entry
             if (isset($style['border']) && is_string($style['border']))//border is a comma delimited str
             {
                 $border_value = [];
@@ -589,7 +589,12 @@ class XLSXWriter
                 $style_indexes[$i]['font_idx'] = self::add_to_list_get_index($fonts, json_encode($font));
             }
         }
-        return array('fills' => $fills, 'fonts' => $fonts, 'borders' => $borders, 'styles' => $style_indexes);
+        return [
+            'fills' => $fills,
+            'fonts' => $fonts,
+            'borders' => $borders,
+            'styles' => $style_indexes
+        ];
     }
 
     protected function writeStylesXML()
@@ -879,7 +884,7 @@ class XLSXWriter
     public static function sanitize_filename($filename) //http://msdn.microsoft.com/en-us/library/aa365247%28VS.85%29.aspx
     {
         $nonprinting = array_map('chr', range(0, 31));
-        $invalid_chars = array('<', '>', '?', '"', ':', '|', '\\', '/', '*', '&');
+        $invalid_chars = ['<', '>', '?', '"', ':', '|', '\\', '/', '*', '&'];
         $all_invalids = array_merge($nonprinting, $invalid_chars);
         return str_replace($all_invalids, "", $filename);
     }
@@ -1012,7 +1017,7 @@ class XLSXWriter
 
         # Set month days and check for leap year.
         $leap = (($year % 400 == 0) || (($year % 4 == 0) && ($year % 100))) ? 1 : 0;
-        $mdays = array(31, ($leap ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31);
+        $mdays = [31, ($leap ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
         # Some boundary checks
         if ($year != 0 || $month != 0 || $day != 0) {
